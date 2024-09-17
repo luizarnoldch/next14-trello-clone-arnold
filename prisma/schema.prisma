@@ -1,0 +1,97 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Board {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  createdAt       DateTime @default(now())
+  imageDirectLink String
+  imageFullUrl    String
+  imageId         String
+  imageThumbUrl   String
+  imageUsername   String
+  orgId           String
+  title           String
+  updatedAt       DateTime @updatedAt
+
+  cards Card[]
+}
+
+model Card {
+  id    String @id @default(auto()) @map("_id") @db.ObjectId
+  title String
+  order Int
+
+  boardId String @db.ObjectId
+  board   Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+
+  contents CardContent[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CardContent {
+  id          String  @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  order       Int
+  description String?
+
+  cardId String @db.ObjectId
+  card   Card   @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Limitation {
+  id    String @id @default(auto()) @map("_id") @db.ObjectId
+  orgId String @unique
+  limit Int    @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum ACTION {
+  CREATE
+  UPDATE
+  DELETE
+}
+
+enum ENTITY {
+  BOARD
+  CARD
+  CONTENT
+}
+
+model Log {
+  id        String @id @default(auto()) @map("_id") @db.ObjectId
+  orgId     String
+  userId    String
+  userImage String
+  userName  String
+
+  action ACTION
+
+  entity      ENTITY
+  entityId    String
+  entityTitle String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Subscription {
+  id                     String    @id @default(auto()) @map("_id") @db.ObjectId
+  orgId                  String    @unique
+  stripeCustomerId       String?   @unique
+  stripeSubscriptionId   String?   @unique
+  stripePriceId          String?   @unique
+  stripeCurrentPeriodEnd DateTime?
+}
